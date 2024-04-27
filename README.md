@@ -194,9 +194,33 @@ Concepts
         // we have to pass the entire object in to retain reactivity
         callSomeFunction(state.count)
         ```
-14)  Reactive and ref interactions 
-    - accessing reactive wrapped ref
-15)  At this point (Additional Ref Unwrapping Details located at https://vuejs.org/guide/essentials/reactivity-fundamentals.html#additional-ref-unwrapping-details ), I started coding the topics and combined the notes in the code.  
+14)  **Additional Ref Unwrapping Details** - Reactive and ref interactions 
+    - ref automatically unwrapped when accessed/mutated as a property of a reactive object
+     
+    ```
+    const count = ref(0)
+    const state = reactive({
+      count
+    })
+    
+    console.log(state.count) // 0
+    
+    state.count = 1
+    console.log(count.value) // 1
+    ```
+
+    - old ref assigned to property of reactive obj gets replaced when property assigned a new ref
+    
+    ```
+    const otherCount = ref(2)
+    
+    state.count = otherCount
+    console.log(state.count) // 2
+    // original ref is now disconnected from state.count
+    console.log(count.value) // 1
+    ```
+    
+15)    
 
 
 
