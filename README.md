@@ -239,7 +239,7 @@ Concepts
         //wrong way
         <span>{{ author.books.length > 0 ? 'Yes' : 'No' }}</span>
 
-        //right way - NOTE the `computed()` below that generates a ref() and is tracked to re-render when `author.books` changes
+        //right way - NOTE the `computed()` below that generates/returns a ref() and is tracked to re-render when `author.books` changes.  If `author.books` Reactive dependency has not changed, cached value is returned.  Example of where computed property never updates is `const now = computed(() => Date.now())` because `Date.now()` is not a reactive dependency
         const publishedBooksMessage = computed(() => {
           return author.books.length > 0 ? 'Yes' : 'No'
         })
@@ -247,4 +247,138 @@ Concepts
         {{ publishedBooksMessage }} //ref is auto unwrapped
         ```
 
-pawsitiveoutlook
+      - writeable computed Properties
+      ```
+      import { ref, reactive } from 'vue'
+
+      const firstName = ref('jon');
+      const lastName = ref('doe');
+
+      const fullName = computed(() => {
+
+        get() {
+          //should be free of side effects in body of function
+          return firstName.value + ' ' + lastName.value //this is a derivied state and should not be mutated and can be thought of as a temporary snapshot (i.e. source state changes means new snapshot is created); instead, update the state that the returnn value depends on
+        }
+
+        set(newName) {
+          [firstName.value, lastName.value] = newName.split(' ') //destructive assignment
+        }
+      })
+
+      //to call the setter
+      fullName.vavlue = 'jane doe'
+      ```
+
+
+15) **Class and style bindings** common need for data binding is manipulating element's class list and inline styles and vue provides enhancements when v-bind is used with class/inline styles
+
+    - Binding HTML classes (object bound to class is inline)
+      ```
+      const isActive = ref(true) // a change updates html code
+      const hasError = ref(false) // a change updates html code
+
+      <div
+        class="static"
+        :class="{active: isActive, 'text-danger': hasError}" //:class short of v-bind:class
+        ></div>
+      ```
+      renders to
+      ```
+      <div class="static active"></div>  
+      ```
+
+    - Binding HTML classes (object bound to class is NOT inline)
+      ```
+      const notInlineClassObj = reactive({
+        active: true,
+        'text-danger': false
+      })
+
+      <div
+        :class="notInlineClassObj"
+        ></div>
+      ```
+      renders to
+      ```
+      <div class="active"></div>  
+      ```
+    - Binding to computed property that returns an objects
+      ```
+      const isActive = ref(true)
+      const error = ref(null)
+
+      const computedClassObject = computed(() => {
+        active: isActive.value && !error.value,
+        'text-danger': error.value && error.value.type === 'fatal'
+      })
+
+      <div :class="classObject"></div>
+      ```
+    - Binding to Arrays - binding `:class` to array to apply list of classes conditionally
+      ```
+      const activeClass = ref('active')
+      const errorClass = ref('text-danger')
+
+      <div :class="[isActiveVar ? activeClass:'', errorClass]"></div> //renders <div class="active text-danger"></div>
+
+      <div :class="[{activeClass:isActiveVar}, errorClass]"> //above using object syntax
+      ```
+    - Class attribute on component with single root level element
+      ```
+      //part of MyComponent component
+      <p class="class1">Hello World</p> //single root element
+
+      <MyComponent class="class2" />
+
+
+      //rendered
+      <p class="class1 class2"></p>
+      ```
+
+    - Class binding with single root element level components
+      ```
+      //part of MyComponent component
+      <p class="class1">Hello World</p> //single root element
+
+      <MyComponent :class="{class3: true}" />
+
+      //rendered
+      <p class="class1 class2"></p>
+      ```
+
+    - class binding on components with multiple root level element
+      ```
+      //multiple root level elements
+      <p :class="$attrs.class">Hello World</div>
+      <span>second root level element</span>
+
+      //component being used
+      <MyComponent class="class2">
+
+      //rendered output
+      <p :class="class2">Hello World</div>
+      <span>second root level element</span>
+      ```
+    - Binding inline style objects
+      ```
+      const activeColor = ref('red')
+      const activeFontSize = ref(30)
+
+      <p :style="{attr1: activeColor, attr2: activeFontSize + 'px'}">hi</p>
+      ```
+    - Binding style object directly instead of notInlineClassObj
+      ```
+      const directlyBoundStyleObj = reactive({
+        activeColor: 'red',
+        activeFontSize: '30px'
+      })
+
+      <div :style="directlyBoundStyleObj"> hi </div>
+
+      NOTE: object style binding often used with computed properties that return objects
+      ```
+    - Binding to array of style objects (similar to binding to array of class objects)
+    - Auto-prefixing
+    sp_start: https://vuejs.org/guide/essentials/class-and-style.html
+    When you use a CSS property
